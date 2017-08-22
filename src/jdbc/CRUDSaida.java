@@ -1,6 +1,5 @@
 package jdbc;
 
-import excecoes.ProdutoNaoEncontrado;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -8,8 +7,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import javax.swing.JOptionPane;
-import model.Estoques;
-import model.Produtos;
 import model.Saidas;
 
 public class CRUDSaida {
@@ -65,71 +62,70 @@ public class CRUDSaida {
                         "               tb_estoques.est_arm = 'Nutrição';";
 
             st = connection.prepareStatement(sql3);
-            st.setInt(1, codProd);//Estou buscando
-            st.setDate(2, dataValSQL);//Estou buscando
+            st.setInt(1, codProd);//Estou buscando no sql
+            st.setDate(2, dataValSQL);//Estou buscando no sql
             result = st.executeQuery();
             while(result.next()){
-                codEst = result.getInt(2);//Estou pegando
-                qtdEst = result.getInt(3);//Estou pegando
+                codEst = result.getInt(2);//Estou pegando o campo 2 do sql
+                qtdEst = result.getInt(3);//Estou pegando o campo 3 do sql
                 
             }
-            JOptionPane.showMessageDialog(null,"Cod Est: "+codEst);
-            JOptionPane.showMessageDialog(null,"Qtd Est: "+qtdEst);
+            //JOptionPane.showMessageDialog(null,"Cod Est: "+codEst);
+            //JOptionPane.showMessageDialog(null,"Qtd Est: "+qtdEst);
             }catch(SQLException e){
                 JOptionPane.showMessageDialog(null, "Erro no Armazem Saída!");
             }
-            //JOptionPane.showMessageDialog(,null,dataSaidaSQL);
+            
             int resultado1 = 0;
-               if(saida.getQuantidadeSai() > qtdEst){
+               if(saida.getQuantidadeSai() > qtdEst || codEst == 0){
 
-                    JOptionPane.showMessageDialog(null, "Quantidade insuficiente ou produto não encontrado no estoque.");
+                    JOptionPane.showMessageDialog(null, "Quantidade insuficiente ou produto com Data Validade Errada!!");
                }else{
-                resultado1 = qtdEst - saida.getQuantidadeSai();//Realizando a baixa no estoque
-                moviEsto(codEst, resultado1);
-                java.util.Date data1 = saida.getDataSaida();
-                java.sql.Date dataSaidaSQL = new java.sql.Date(data1.getTime());
-                
-                
-                if(contador == 0){
-                
+                    resultado1 = qtdEst - saida.getQuantidadeSai();//Realizando a baixa no estoque
+                    moviEsto(codEst, resultado1);
+                    java.util.Date data1 = saida.getDataSaida();
+                    java.sql.Date dataSaidaSQL = new java.sql.Date(data1.getTime());
+
+
+                    if(contador == 0){
+
+                        try{
+                        sql = "insert into tb_saidas(sai_dt) VALUES (?);";
+                        st = connection.prepareStatement(sql);
+                        st.setDate(1, dataSaidaSQL);
+                        st.executeUpdate();
+                        }catch(SQLException e){
+                            JOptionPane.showMessageDialog(null, "Erro na Data Saída!");
+
+                        }
+                        contador = contador + 1;
+                    }
+                    int codSaid = codSai();
+
+
                     try{
-                    sql = "insert into tb_saidas(sai_dt) VALUES (?);";
-                    st = connection.prepareStatement(sql);
-                    st.setDate(1, dataSaidaSQL);
+
+                    sql2 = "insert into tb_it_sai(it_sai_qtd, it_sai_pro_cod, it_sai_sai_cod) VALUES (?,?,?);";
+                    st = connection.prepareStatement(sql2);
+                    st.setInt(1,saida.getQuantidadeSai());
+                    st.setInt(2, codProd );
+                    st.setInt(3, codSaid);
                     st.executeUpdate();
                     }catch(SQLException e){
-                        JOptionPane.showMessageDialog(null, "Erro na Data Saída!");
-
+                        JOptionPane.showMessageDialog(null, "Erro nos Itens Saída!");
                     }
-                    contador = contador + 1;
-                }
-                int codSaid = codSai();
 
-
-                try{
-
-                sql2 = "insert into tb_it_sai(it_sai_qtd, it_sai_pro_cod, it_sai_sai_cod) VALUES (?,?,?);";
-                st = connection.prepareStatement(sql2);
-                st.setInt(1,saida.getQuantidadeSai());
-                st.setInt(2, codProd );
-                st.setInt(3, codSaid);
-                st.executeUpdate();
-                }catch(SQLException e){
-                    JOptionPane.showMessageDialog(null, "Erro nos Itens Saída!");
-                }
-        //JOptionPane.showMessageDialog(,null,dataSaidaSQL);
-                if(resultado1 == 0){
-                    try{
-                        sql4 = "DELETE FROM tb_estoques WHERE tb_estoques.est_cod = ?";
-                        st = connection.prepareStatement(sql4);
-                        st.setInt(1, codEst);
-                        st.executeUpdate();
-                    }catch(SQLException e){
-                        JOptionPane.showMessageDialog(null, "Erro ao Deletar o estoque!");
+                    if(resultado1 == 0){
+                        try{
+                            sql4 = "DELETE FROM tb_estoques WHERE tb_estoques.est_cod = ?";
+                            st = connection.prepareStatement(sql4);
+                            st.setInt(1, codEst);
+                            st.executeUpdate();
+                        }catch(SQLException e){
+                            JOptionPane.showMessageDialog(null, "Erro ao Deletar o estoque!");
+                        }
                     }
                 }
-               
-        }
         }        
     }
     
@@ -240,8 +236,8 @@ public class CRUDSaida {
         
         ArrayList<Saidas> saidas = new ArrayList<Saidas>();
         
-        java.util.Date dataBusc = data;
-        java.sql.Date dataSaidaSQL = new java.sql.Date(dataBusc.getTime());
+//        java.util.Date dataBusc = data;
+        java.sql.Date dataSaidaSQL = new java.sql.Date(data.getTime());
         try{
             sql = "SELECT tb_produtos.pro_nome as 'Produto',\n" +
                     "sum(tb_it_sai.it_sai_qtd) as 'Quantidade',\n" +
