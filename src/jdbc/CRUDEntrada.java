@@ -232,8 +232,7 @@ public class CRUDEntrada {
                 return null;
             } 
         }
-    
-        
+
         
         public ArrayList<Entradas> buscarProdutosCod(int cod){
             
@@ -267,6 +266,67 @@ public class CRUDEntrada {
                 return null;
         }
       }
+        public ArrayList<Entradas> buscarProdutosEdi(int cod){
+            
+            ArrayList<Entradas> entradas = new ArrayList<Entradas>();
+
+            try{
+                sql = "SELECT *        from tb_produtos\n" +
+"                inner join tb_it_ent \n" +
+"                on tb_it_ent.it_ent_pro_cod = tb_produtos.pro_cod\n" +
+"                inner join tb_entradas\n" +
+"                on tb_entradas.ent_cod = tb_it_ent.it_ent_ent_cod\n" +
+"                inner join tb_categorias\n" +
+"				on tb_categorias.cat_cod = tb_produtos.pro_cat_cod\n" +
+"				where tb_entradas.ent_cod = ?;";
+                st = connection.prepareStatement(sql);
+                st.setInt(1, cod);
+                result = st.executeQuery();
+               
+                while(result.next()){
+                    Produtos produto = new Produtos();
+                    Entradas entrada = new Entradas();
+                    Categorias categoria = new Categorias();
+                    
+                    categoria.setCategoria(result.getString(12));
+                    produto.setNome(result.getString(2));
+                    produto.setDescricao(result.getString(3));
+                    produto.setCategoria(categoria);
+                    entrada.setProduto(produto);
+                    entrada.setDataVal(result.getDate(6));
+                    entrada.setQuantidade(result.getInt(5));
+                    entradas.add(entrada);
+                }
+                return entradas;
+            }catch(SQLException se){
+                resultado = "Erro!";
+                return null;
+        }
+      }
+        public ArrayList<String> entDoDia (Date data){
+            
+            java.util.Date data1 = data;
+            java.sql.Date dataDia = new java.sql.Date(data1.getTime());
+            
+            ArrayList<String> entradas = new ArrayList<String>();
+ 
+            entradas.clear();
+    
+            try{
+                sql = "Select ent_cod from tb_entradas  where ent_dt = ?";
+                st = connection.prepareStatement(sql);
+                st.setDate(1, dataDia);
+                result = st.executeQuery();
+                while(result.next()){
+                    entradas.add("" + result.getInt(1));
+                } 
+             
+            return entradas;
+            }catch(SQLException e){
+                resultado = "Erro";
+                return null;
+            }
+    }
       
 //    public void editar(){}
 //    public void excluir(){}
