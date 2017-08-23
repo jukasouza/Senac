@@ -77,7 +77,7 @@ public class CRUDSaida {
             }
             
             int resultado1 = 0;
-               if(saida.getQuantidadeSai() > qtdEst || codEst == 0){
+               if(saida.getQuantidadeSai() > qtdEst){
 
                     JOptionPane.showMessageDialog(null, "Quantidade insuficiente ou produto com Data Validade Errada!!");
                }else{
@@ -85,7 +85,9 @@ public class CRUDSaida {
                     moviEsto(codEst, resultado1);
                     java.util.Date data1 = saida.getDataSaida();
                     java.sql.Date dataSaidaSQL = new java.sql.Date(data1.getTime());
-
+                    JOptionPane.showMessageDialog(null,"Qtd Estoque Anterior: "+qtdEst+ "\n" + "Qtd Saída: "
+                                                        +saida.getQuantidadeSai()+ "\n" + "Qtd Estoque Atual: "+resultado1);
+                   
 
                     if(contador == 0){
 
